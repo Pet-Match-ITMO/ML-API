@@ -2,11 +2,11 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.database.images import load_db
-from src.models.photo import Contact, NextPet, UserPhoto
+from src.database.pets import load_db
+from src.models.pet import Contact, NextPet, UserRequest
 
 
-images_db = load_db()
+pets_db = load_db()
 app = FastAPI()
 
 origins = ["*"]
@@ -20,14 +20,21 @@ app.add_middleware(
 
 @app.post("/get_pet_contact", response_model=Contact)
 async def get_pet_contact():
-    info = "г. Москва, 5112-й Проектируемый пр-д, стр. 1-3, 109383, +7 903 103 20 02"
+    info = """Контакты:
+☎8 9З7 719 06 08 Ева
+📩vk.com/id_ewa"""
     return Contact(info=info)
 
 
 @app.post("/get_next_pet", response_model=NextPet)
-async def get_next_pet(user_photo: UserPhoto) -> NextPet:
-    next_url = images_db['Image'][user_photo.next_token]
-    return NextPet(url=next_url, next_token=(user_photo.next_token+1) % len(images_db["Image"]))
+async def get_next_pet(user_photo: UserRequest) -> NextPet:
+    pet = pets_db.iloc[user_photo.next_token]
+    return NextPet(
+        id=pet["id"],
+        attachments=pet["attachments"],
+        description=pet["shortText"][:4096],
+        next_token=(user_photo.next_token+1) % len(pets_db)
+    )
 
 
 @app.get("/")

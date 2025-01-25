@@ -1,7 +1,10 @@
 import requests
+from dacite import from_dict
 from decouple import config
 from fastapi import status
 from telebot import types
+
+from src.models.pet import Pet
 
 START_TEXT = """Это бот для поиска новых хозяев для бездомных животных из популярных приютов Москвы\n\
     Чтобы продолжить, необходимо Нажать на кнопку Start Match"""
@@ -10,10 +13,8 @@ ACCEPT = "\U00002705"
 USER_NOT_FOUND_ERROR = "Для пользователя не найдены данные"
 REJECT = "\U0000274C"
 
-S3_URL = config('S3_URL')
 API_URL = config('API_URL')
 user_vector_db = {}
-
 
 class BotService:
     def __init__(self, bot):
@@ -54,11 +55,21 @@ class BotService:
                 self.bot.send_message(user_id, text=START_TEXT, reply_markup=types.ReplyKeyboardRemove())
             else:
                 response_json = response.json()
-                print(S3_URL+response_json['url'])
+                print(response_json)
+                pet: Pet = from_dict(data=response_json, data_class=Pet)
+                print(pet.attachments[0].photo.orig_photo.url)
                 markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
                 self.add_service_button(markup)
-                self.bot.send_photo(user_id, S3_URL + response_json['url'],
-                                    reply_markup=markup)
+                mediaGroup = list(
+                    map(lambda x: types.InputMediaPhoto(x.photo.orig_photo.url), filter(
+                            lambda x: x.type == "photo",
+                            pet.attachments,
+                        )
+                    )
+                )
+                self.bot.send_media_group(user_id, mediaGroup)
+                self.bot.send_message(user_id, pet.description, reply_markup=markup, disable_web_page_preview=True)
+
                 user_vector_db[user_id] = response_json['next_token']
         elif ACCEPT:
             if user_id in user_vector_db:
@@ -74,7 +85,7 @@ class BotService:
             response_json = response.json()
             print(response_json['info'])
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            self.add_service_button(markup)
+            self.add_start_button(markup)
             self.bot.send_message(user_id,
                                   text=response_json['info'],
                                   reply_markup=markup)
