@@ -1,5 +1,6 @@
 import os
 import json
+from tqdm import tqdm
 from src.parser.parse_group import parse_data_from_group, JSONEncoder
 from src.llm.solver import LLMSolver
 
@@ -22,23 +23,24 @@ if __name__ == "__main__":
                 all_data = {}
     print(f"Loaded existing data for {len(all_data)} groups from db.json")
 
-    for group in groups:
+    for group in tqdm(groups, desc="Processing groups", unit="group"):
         if group in all_data:
-            print(f"Skip {group=}, already in db.json")
+            tqdm.write(f"Skip {group=}, already in db.json")
             continue
-        print(f"Get db from {group=}")
+        tqdm.write(f"Get db from {group=}")
         try:
             result = parse_data_from_group(group)
             relevant_items = list(filter(
                 lambda post: len(post.text) > 0 and solver.is_animal_profile(post.text),
                 result.items
             ))
-            for item in relevant_items:
+            tqdm.write(f"Found {len(relevant_items)} relevant items in group '{group}'")
+            for item in tqdm(relevant_items, desc=f"Processing posts in {group}", leave=False):
                 item.shortText = solver.summarize(item.text)
                 item.pet_info = solver.generate_pet_json_from_post(item.text)
             all_data[group] = relevant_items
         except Exception as e:
-            print(f"Error processing group '{group}': {e}")
+            tqdm.write(f"Error processing group '{group}': {e}")
             continue
 
     with open("db.json", "w", encoding='utf-8') as out:

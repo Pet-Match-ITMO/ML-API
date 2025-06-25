@@ -1,3 +1,4 @@
+import json
 from decouple import config
 from gigachat import GigaChat
 from gigachat.models import Chat, Messages, MessagesRole
@@ -5,7 +6,7 @@ from gigachat.models import Chat, Messages, MessagesRole
 class LLMSolver:
     def __init__(self):
         giga_key = config("SB_AUTH_DATA")
-        self.llm = GigaChat(credentials=giga_key, model="GigaChat", timeout=30, verify_ssl_certs=False)
+        self.llm = GigaChat(credentials=giga_key, model="GigaChat-Max", timeout=30, verify_ssl_certs=False)
 
     def is_animal_profile(self, post_text):
         system_prompt = 'Тебе дадут текст поста ВКонтакте, исходя из текста нужно определить, является ли пост анкетой животного из приюта.\
@@ -80,11 +81,11 @@ class LLMSolver:
             "Поле temperament должно содержать список характеристик и привычек животного, а также отношение к людям. "
             "Поле owner_requirements — список требований к новому хозяину. "
             "Поле photos не включай. "
+            "Если данных о плохом здоровье нет, пиши здоров/здоровая. "
             "Ответ должен быть только валидным JSON."
         )
         user_prompt = f"Извлеки данные из этого поста и верни только JSON: {post_text}"
         response = self.solve(user_prompt=user_prompt, system_prompt=system_prompt)
-        import json
         try:
             return json.loads(response)
         except Exception:
