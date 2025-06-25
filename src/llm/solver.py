@@ -44,3 +44,48 @@ class LLMSolver:
                 generated_response += chunk.choices[0].delta.content
 
         return generated_response
+    
+    def generate_pet_json_from_post(self, post_text: str) -> dict:
+        """
+        Генерирует JSON-данные о животном из текста поста с помощью LLM.
+        Возвращает словарь с полями:
+        age (объект: years, months, days), vaccinations, sterilization, health (объект: status, diseases, vaccinations),
+        temperament (список характеристик и привычек), name, birth_place, grow_up_with, previous_owner,
+        owner_requirements (список), sterilization
+        """
+        system_prompt = (
+            "Ты — помощник для извлечения структурированных данных о животных из постов. "
+            "Тебе будет дан текст поста о животном из приюта. "
+            "Твоя задача — извлечь и вернуть данные в формате JSON строго по следующей схеме: "
+            '{\n'
+            '  "age": {"years": 0, "months": 0, "days": 0},\n'
+            '  "vaccinations": true,\n'
+            '  "sterilization": true,\n'
+            '  "health": {\n'
+            '    "status": "здоров",\n'
+            '    "diseases": ["болезнь1", "болезнь2"],\n'
+            '    "vaccinations": ["прививка1", "прививка2"]\n'
+            '  },\n'
+            '  "temperament": ["дружелюбный", "активный"],\n'
+            '  "name": "Имя",\n'
+            '  "birth_place": "город",\n'
+            '  "grow_up_with": "семья/улица/другое",\n'
+            '  "previous_owner": "владелец/приют" или null,\n'
+            '  "owner_requirements": ["опытный", "без маленьких детей"],\n'
+            '  "sterilization": true\n'
+            '}'
+            "\nЕсли данных нет — ставь null, пустую строку или пустой список. Не добавляй лишних полей. "
+            "Поле previous_owner указывай только если известно, что животное было сдано от предыдущего хозяина или другого приюта, иначе null. "
+            "Поле grow_up_with — где/с кем жило животное до приюта или где найдено. "
+            "Поле temperament должно содержать список характеристик и привычек животного, а также отношение к людям. "
+            "Поле owner_requirements — список требований к новому хозяину. "
+            "Поле photos не включай. "
+            "Ответ должен быть только валидным JSON."
+        )
+        user_prompt = f"Извлеки данные из этого поста и верни только JSON: {post_text}"
+        response = self.solve(user_prompt=user_prompt, system_prompt=system_prompt)
+        import json
+        try:
+            return json.loads(response)
+        except Exception:
+            return {"error": "LLM did not return valid JSON", "raw": response}

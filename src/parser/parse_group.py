@@ -18,9 +18,11 @@ def parse_data_from_group(group_name = "domikvlg", save = True) -> GroupPostsRes
 
     url = f"https://api.vk.com/method/wall.get?domain={group_name}&count=200&access_token={access_token}&v=5.81"
     response = requests.get(url)
-
-    jsonResponse = response.json()["response"]
-    groupPosts = from_dict(data=jsonResponse, data_class=GroupPostsResponse)
+    jsonResponse = response.json()
+    print(f"Response from URL: {url}")
+    print(jsonResponse)
+    actualResponse = jsonResponse["response"]
+    groupPosts = from_dict(data=actualResponse, data_class=GroupPostsResponse)
 
     if(save):
         with open("sample_data.json", "w", encoding='utf-8') as out:
