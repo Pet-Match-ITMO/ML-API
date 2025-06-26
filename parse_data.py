@@ -37,7 +37,11 @@ if __name__ == "__main__":
             tqdm.write(f"Found {len(relevant_items)} relevant items in group '{group}'")
             for item in tqdm(relevant_items, desc=f"Processing posts in {group}", leave=False):
                 item.shortText = solver.summarize(item.text)
-                item.pet_info = solver.generate_pet_json_from_post(item.text)
+                try:
+                    item.pet_info = solver.generate_pet_json_from_post(item.text)
+                except Exception as e:
+                    tqdm.write(f"Error generating pet info for post {item.id} in group '{group}': {e}")
+                    item.pet_info = None
             all_data[group] = relevant_items
         except Exception as e:
             tqdm.write(f"Error processing group '{group}': {e}")

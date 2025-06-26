@@ -6,7 +6,7 @@ from gigachat.models import Chat, Messages, MessagesRole
 class LLMSolver:
     def __init__(self):
         giga_key = config("SB_AUTH_DATA")
-        self.llm = GigaChat(credentials=giga_key, model="GigaChat-Max", timeout=30, verify_ssl_certs=False)
+        self.llm = GigaChat(credentials=giga_key, model="GigaChat", timeout=30, verify_ssl_certs=False)
 
     def is_animal_profile(self, post_text):
         system_prompt = 'Тебе дадут текст поста ВКонтакте, исходя из текста нужно определить, является ли пост анкетой животного из приюта.\
@@ -68,6 +68,10 @@ class LLMSolver:
             '    "vaccinations": ["прививка1", "прививка2"]\n'
             '  },\n'
             '  "temperament": ["дружелюбный", "активный"],\n'
+            '  "contact": {\n'
+            '    "number": "+7-929-946-30-31",\n'
+            '    "name": "Лилия/@mospriut",\n'
+            '  },\n'
             '  "name": "Имя",\n'
             '  "birth_place": "город",\n'
             '  "grow_up_with": "семья/улица/другое",\n'
@@ -76,17 +80,19 @@ class LLMSolver:
             '  "sterilization": true\n'
             '}'
             "\nЕсли данных нет — ставь null, пустую строку или пустой список. Не добавляй лишних полей. "
-            "Поле previous_owner указывай только если известно, что животное было сдано от предыдущего хозяина или другого приюта, иначе null. "
+            "Поле previous_owner указывай только если известно, что животное было сдано от предыдущего хозяина или другого приюта, иначе пиши 'неизвестно'. "
             "Поле grow_up_with — где/с кем жило животное до приюта или где найдено. "
             "Поле temperament должно содержать список характеристик и привычек животного, а также отношение к людям. "
             "Поле owner_requirements — список требований к новому хозяину. "
-            "Поле photos не включай. "
+            "Поле photos не включай в JSON"
+            "Поле vaccinations должно быть true, если животное привито, иначе false"
+            "Поле sterilization должно быть true, если животное стерилизовано, иначе false. "
             "Если данных о плохом здоровье нет, пиши здоров/здоровая. "
             "Ответ должен быть только валидным JSON."
+            "Все ключи должны строго соответствовать указанной схеме, не добавляй лишних полей"
+            "Болезни и прививки указывай конкретно, если не знаешь, что было, пиши пустой список. "
         )
         user_prompt = f"Извлеки данные из этого поста и верни только JSON: {post_text}"
         response = self.solve(user_prompt=user_prompt, system_prompt=system_prompt)
-        try:
-            return json.loads(response)
-        except Exception:
-            return {"error": "LLM did not return valid JSON", "raw": response}
+    
+        return json.loads(response)

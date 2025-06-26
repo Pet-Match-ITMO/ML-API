@@ -16,7 +16,7 @@ class JSONEncoder(json.JSONEncoder):
 def parse_data_from_group(group_name = "domikvlg", save = True) -> GroupPostsResponse:
     access_token = config('ACCESS_TOKEN')
 
-    url = f"https://api.vk.com/method/wall.get?domain={group_name}&count=200&access_token={access_token}&v=5.81"
+    url = f"https://api.vk.com/method/wall.get?domain={group_name}&count=5000&access_token={access_token}&v=5.81"
     response = requests.get(url)
     jsonResponse = response.json()
     print(jsonResponse.keys())
