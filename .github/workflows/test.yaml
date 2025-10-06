@@ -87,7 +87,6 @@ jobs:
           except Exception as e:
               print(f'❌ Ошибка импорта LLM модулей: {e}')
               sys.exit(1)
-          "
           
           # Тест загрузки данных (если доступны)
           try:
