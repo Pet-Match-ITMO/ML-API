@@ -13,6 +13,8 @@ on:
 jobs:
   test:
     uses: ./.github/workflows/test.yaml
+    secrets:
+      PETS_DATABASE_PATH: ${{ secrets.PETS_DATABASE_PATH }}
 
   build-test:
     runs-on: ubuntu-latest

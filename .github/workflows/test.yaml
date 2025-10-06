@@ -2,7 +2,10 @@ name: Test ML-API
 
 on:
   push: {}
-  workflow_call: {}
+  workflow_call:
+    secrets:
+      PETS_DATABASE_PATH:
+        required: true
 
 jobs:
   lint:
