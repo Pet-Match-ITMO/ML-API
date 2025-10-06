@@ -13,7 +13,7 @@ ACCEPT = "\U00002705"
 USER_NOT_FOUND_ERROR = "Для пользователя не найдены данные"
 REJECT = "\U0000274C"
 
-API_URL = config('API_URL')
+API_URL = config('API_URL', default='http://localhost:8001')
 user_vector_db = {}
 
 class BotService:
