@@ -17,7 +17,17 @@ ML_API_SERVER_SSH_KEY=your_ssh_private_key_content
 
 #### Конфигурация приложения:
 ```bash
+# Обязательные секреты
 PETS_DATABASE_PATH=https://storage.yandexcloud.net/pet-match-s3-storage/PetMatch/db.json
+
+# API Configuration
+API_URL=http://your-server:8001                    # URL ML-API сервиса (для самоссылок)
+
+# Опциональные секреты (если используются соответствующие функции)
+BOT_TOKEN=your_telegram_bot_token
+ACCESS_TOKEN=your_vk_api_token
+SB_AUTH_DATA=your_gigachat_auth_data
+CACHE_TTL=300
 ```
 
 ### Подготовка сервера

@@ -7,6 +7,11 @@ services:
       - "8001:8000"
     environment:
       - PETS_DATABASE_PATH=${PETS_DATABASE_PATH}
+      - API_URL=${API_URL}
+      - BOT_TOKEN=${BOT_TOKEN}
+      - ACCESS_TOKEN=${ACCESS_TOKEN}
+      - SB_AUTH_DATA=${SB_AUTH_DATA}
+      - CACHE_TTL=${CACHE_TTL}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]

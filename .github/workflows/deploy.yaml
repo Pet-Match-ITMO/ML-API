@@ -78,10 +78,16 @@ jobs:
             # Обновляем код
             git pull origin main
             
-            # Создаем .env файл
-            cat > .env << EOF
-            PETS_DATABASE_PATH=${{ secrets.PETS_DATABASE_PATH }}
-            EOF
+            # Экспортируем переменные окружения для генерации .env
+            export PETS_DATABASE_PATH="${{ secrets.PETS_DATABASE_PATH }}"
+            export API_URL="${{ secrets.API_URL }}"
+            export BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
+            export ACCESS_TOKEN="${{ secrets.ACCESS_TOKEN }}"
+            export SB_AUTH_DATA="${{ secrets.SB_AUTH_DATA }}"
+            export CACHE_TTL="${{ secrets.CACHE_TTL }}"
+            
+            # Генерируем .env файл
+            ./generate-env.sh
             
             # Логинимся в GHCR
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
