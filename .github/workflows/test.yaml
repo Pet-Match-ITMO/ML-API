@@ -24,19 +24,18 @@ jobs:
       - name: Lint with flake8
         run: |
           # Останавливаем сборку если есть синтаксические ошибки или неопределенные имена
-          # Исключаем LLM модули, которые требуют дополнительные зависимости
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=src/llm/
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # Предупреждения для остального кода
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=src/llm/
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       
       - name: Check code formatting with black
         run: |
-          black --check --diff . --exclude="src/llm/"
+          black --check --diff .
         continue-on-error: true
       
       - name: Check import sorting with isort
         run: |
-          isort --check-only --diff . --skip-glob="src/llm/*"
+          isort --check-only --diff .
         continue-on-error: true
 
   test:
@@ -64,7 +63,7 @@ jobs:
           import os
           sys.path.append('.')
           
-          # Тест импортов (только необходимые для API)
+          # Тест импортов
           try:
               from src.database.pets import load_db
               from src.models.pet import Contact, NextPet, UserRequest
@@ -73,15 +72,21 @@ jobs:
               print(f'❌ Ошибка импорта основных модулей: {e}')
               sys.exit(1)
           
-          # Тест импорта VK модели (может не использоваться в API)
+          # Тест импорта VK модели
           try:
               from src.models.vk_post import VKPost, GroupPostsResponse
               print('✅ VK модели импортированы')
           except Exception as e:
-              print(f'⚠️ VK модели недоступны: {e}')
+              print(f'❌ Ошибка импорта VK моделей: {e}')
+              sys.exit(1)
           
-          # НЕ тестируем LLM модули, так как они не нужны для API
-          print('ℹ️ LLM модули пропущены (не требуются для API)')
+          # Тест импорта LLM модулей
+          try:
+              from src.llm.solver import LLMSolver
+              print('✅ LLM модули импортированы')
+          except Exception as e:
+              print(f'❌ Ошибка импорта LLM модулей: {e}')
+              sys.exit(1)
           "
           
           # Тест загрузки данных (если доступны)

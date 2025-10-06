@@ -3,15 +3,14 @@ line-length = 127
 target-version = ['py311']
 extend-exclude = '''
 /(
-    src/llm/
-    | notebooks/
+    notebooks/
 )/
 '''
 
 [tool.isort]
 profile = "black"
 line_length = 127
-skip_glob = ["src/llm/*", "notebooks/*"]
+skip_glob = ["notebooks/*"]
 known_first_party = ["src"]
 
 [tool.pytest.ini_options]
