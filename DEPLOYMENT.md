@@ -63,7 +63,7 @@ sudo -u deploy git clone https://github.com/Pet-Match-ITMO/ML-API.git /opt/ml-ap
 ### Процесс деплоя
 
 #### Автоматический деплой:
-- **При Push в main** → автоматический деплой в продакшен
+- **При Push в master** → автоматический деплой в продакшен
 - **При Pull Request** → сборка тестового образа
 
 #### Ручной деплой:

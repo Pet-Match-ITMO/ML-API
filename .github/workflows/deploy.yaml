@@ -6,9 +6,9 @@ permissions:
 
 on:
   push:
-    branches: ["main"]
+    branches: ["master"]
   pull_request:
-    branches: ["main"]
+    branches: ["master"]
 
 jobs:
   test:
@@ -38,7 +38,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
       
@@ -61,7 +61,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
       
@@ -76,7 +76,7 @@ jobs:
             cd ${{ secrets.ML_API_SERVER_PROJECT_PATH }}
             
             # Обновляем код
-            git pull origin main
+            git pull origin master
             
             # Экспортируем переменные окружения для генерации .env
             export PETS_DATABASE_PATH="${{ secrets.PETS_DATABASE_PATH }}"
