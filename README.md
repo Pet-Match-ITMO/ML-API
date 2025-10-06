@@ -9,10 +9,11 @@
 
 Перед запуском сервисов нужно добавить необходимые переменные в файл .env
 ```
-PETS_DATABASE_PATH=<S3_ROOT_URL>/<FOLDER>/db.json
-S3_URL=<S3_ROOT_URL>
+PETS_DATABASE_PATH=https://storage.yandexcloud.net/pet-match-s3-storage/PetMatch/db.json
 BOT_TOKEN=<BOT_TOKEN>
 API_URL=http://127.0.0.1:13175
+ACCESS_TOKEN=<VK_ACCESS_TOKEN>
+SB_AUTH_DATA=<GIGACHAT_AUTH_DATA>
 ```
 
 Параметры в <> нужно заменить на ваши значения
