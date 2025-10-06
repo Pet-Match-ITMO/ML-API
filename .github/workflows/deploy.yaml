@@ -91,6 +91,12 @@ jobs:
             # Генерируем .env файл
             ./generate-env.sh
             
+            # Создаем общую сеть если её нет
+            if ! docker network ls | grep -q petmatch-network; then
+              echo "🌐 Создаем общую сеть petmatch-network..."
+              docker network create petmatch-network
+            fi
+            
             # Логинимся в GHCR
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             

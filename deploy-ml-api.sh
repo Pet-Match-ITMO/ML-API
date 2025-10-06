@@ -20,6 +20,16 @@ else
     echo "✅ Используем существующий .env файл"
 fi
 
+# Создаем общую сеть если её нет
+echo "🌐 Проверяем общую сеть..."
+if ! docker network ls | grep -q petmatch-network; then
+    echo "🌐 Создаем общую сеть petmatch-network..."
+    docker network create petmatch-network
+    echo "✅ Сеть petmatch-network создана"
+else
+    echo "✅ Сеть petmatch-network уже существует"
+fi
+
 # Останавливаем текущие контейнеры
 echo "🛑 Останавливаем текущие контейнеры..."
 docker compose -f docker-compose.prod.yaml down || true
