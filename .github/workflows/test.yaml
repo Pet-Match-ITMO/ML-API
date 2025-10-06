@@ -56,7 +56,7 @@ jobs:
       
       - name: Test imports and basic functionality
         env:
-          PETS_DATABASE_PATH: "https://storage.yandexcloud.net/pet-match-s3-storage/PetMatch/db.json"
+          PETS_DATABASE_PATH: ${{ secrets.PETS_DATABASE_PATH }}
         run: |
           python -c "
           import sys
@@ -101,7 +101,7 @@ jobs:
       
       - name: Test API startup
         env:
-          PETS_DATABASE_PATH: "https://storage.yandexcloud.net/pet-match-s3-storage/PetMatch/db.json"
+          PETS_DATABASE_PATH: ${{ secrets.PETS_DATABASE_PATH }}
         run: |
           python -c "
           import sys
@@ -129,7 +129,7 @@ jobs:
           # Запускаем контейнер в фоне
           docker run -d --name ml-api-test-container \
             -p 8000:8000 \
-            -e PETS_DATABASE_PATH="https://storage.yandexcloud.net/pet-match-s3-storage/PetMatch/db.json" \
+            -e PETS_DATABASE_PATH="${{ secrets.PETS_DATABASE_PATH }}" \
             ml-api-test
           
           # Ждем запуска

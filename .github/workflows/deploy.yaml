@@ -71,7 +71,7 @@ jobs:
           host: ${{ secrets.ML_API_SERVER_HOST }}
           username: ${{ secrets.ML_API_SERVER_USER }}
           key: ${{ secrets.ML_API_SERVER_SSH_KEY }}
-          port: ${{ secrets.ML_API_SERVER_PORT || 22 }}
+          port: ${{ secrets.ML_API_SERVER_PORT }}
           script: |
             cd ${{ secrets.ML_API_SERVER_PROJECT_PATH }}
             
