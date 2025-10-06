@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  ml-api:
+    build: .
+    ports:
+      - "8001:8000"
+    environment:
+      - PETS_DATABASE_PATH=${PETS_DATABASE_PATH}
+    volumes:
+      - .:/app
+    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    networks:
+      - ml-api-network
+
+networks:
+  ml-api-network:
+    driver: bridge

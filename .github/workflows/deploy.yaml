@@ -1,0 +1,132 @@
+name: Deploy ML-API
+
+permissions:
+  contents: read
+  packages: write
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yaml
+
+  build-test:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push test image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/pet-match-itmo/ml-api:test-${{ github.sha }}
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push production image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/pet-match-itmo/ml-api:latest
+            ghcr.io/pet-match-itmo/ml-api:${{ github.sha }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ML_API_SERVER_HOST }}
+          username: ${{ secrets.ML_API_SERVER_USER }}
+          key: ${{ secrets.ML_API_SERVER_SSH_KEY }}
+          port: ${{ secrets.ML_API_SERVER_PORT || 22 }}
+          script: |
+            cd ${{ secrets.ML_API_SERVER_PROJECT_PATH }}
+            
+            # Обновляем код
+            git pull origin main
+            
+            # Создаем .env файл
+            cat > .env << EOF
+            PETS_DATABASE_PATH=${{ secrets.PETS_DATABASE_PATH }}
+            EOF
+            
+            # Логинимся в GHCR
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Обновляем docker-compose для использования образа из registry
+            cat > docker-compose.prod.yaml << EOF
+            version: '3.8'
+            
+            services:
+              ml-api:
+                image: ghcr.io/pet-match-itmo/ml-api:latest
+                ports:
+                  - "8001:8000"
+                environment:
+                  - PETS_DATABASE_PATH=\${PETS_DATABASE_PATH}
+                restart: unless-stopped
+                healthcheck:
+                  test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+                  interval: 30s
+                  timeout: 10s
+                  retries: 3
+                  start_period: 40s
+                networks:
+                  - ml-api-network
+            
+            networks:
+              ml-api-network:
+                driver: bridge
+            EOF
+            
+            # Деплоим сервис
+            docker compose -f docker-compose.prod.yaml pull
+            docker compose -f docker-compose.prod.yaml down
+            docker compose -f docker-compose.prod.yaml up -d
+            
+            # Ждем запуска и проверяем
+            sleep 15
+            if curl -f http://localhost:8001/ > /dev/null 2>&1; then
+              echo "✅ ML-API успешно задеплоен!"
+              docker compose -f docker-compose.prod.yaml ps
+            else
+              echo "❌ Ошибка деплоя ML-API"
+              docker compose -f docker-compose.prod.yaml logs ml-api
+              exit 1
+            fi
+            
+            # Очищаем старые образы
+            docker system prune -f

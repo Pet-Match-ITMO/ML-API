@@ -1,0 +1,142 @@
+name: Test ML-API
+
+on:
+  push: {}
+  workflow_call: {}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 black isort
+      
+      - name: Lint with flake8
+        run: |
+          # Останавливаем сборку если есть синтаксические ошибки или неопределенные имена
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Предупреждения для остального кода
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      
+      - name: Check code formatting with black
+        run: |
+          black --check --diff .
+        continue-on-error: true
+      
+      - name: Check import sorting with isort
+        run: |
+          isort --check-only --diff .
+        continue-on-error: true
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio httpx
+      
+      - name: Test imports and basic functionality
+        env:
+          PETS_DATABASE_PATH: "https://storage.yandexcloud.net/pet-match-s3-storage/PetMatch/db.json"
+        run: |
+          python -c "
+          import sys
+          import os
+          sys.path.append('.')
+          
+          # Тест импортов
+          try:
+              from src.database.pets import load_db
+              from src.models.pet import Contact, NextPet, UserRequest
+              print('✅ Все импорты успешны')
+          except Exception as e:
+              print(f'❌ Ошибка импорта: {e}')
+              sys.exit(1)
+          
+          # Тест загрузки данных (если доступны)
+          try:
+              db = load_db()
+              if len(db) > 0:
+                  print(f'✅ База данных загружена: {len(db)} записей')
+              else:
+                  print('⚠️ База данных пуста или недоступна')
+          except Exception as e:
+              print(f'⚠️ Не удалось загрузить базу данных: {e}')
+          "
+      
+      - name: Test API startup
+        env:
+          PETS_DATABASE_PATH: "https://storage.yandexcloud.net/pet-match-s3-storage/PetMatch/db.json"
+        run: |
+          python -c "
+          import sys
+          sys.path.append('.')
+          
+          try:
+              from api import app
+              print('✅ API приложение создано успешно')
+          except Exception as e:
+              print(f'❌ Ошибка создания API: {e}')
+              sys.exit(1)
+          "
+
+  docker-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build Docker image
+        run: |
+          docker build -t ml-api-test .
+      
+      - name: Test Docker container
+        run: |
+          # Запускаем контейнер в фоне
+          docker run -d --name ml-api-test-container \
+            -p 8000:8000 \
+            -e PETS_DATABASE_PATH="https://storage.yandexcloud.net/pet-match-s3-storage/PetMatch/db.json" \
+            ml-api-test
+          
+          # Ждем запуска
+          sleep 10
+          
+          # Проверяем что контейнер запущен
+          if docker ps | grep ml-api-test-container; then
+            echo "✅ Контейнер запущен"
+          else
+            echo "❌ Контейнер не запущен"
+            docker logs ml-api-test-container
+            exit 1
+          fi
+          
+          # Проверяем доступность API
+          if curl -f http://localhost:8000/ > /dev/null 2>&1; then
+            echo "✅ API отвечает"
+          else
+            echo "❌ API не отвечает"
+            docker logs ml-api-test-container
+            exit 1
+          fi
+          
+          # Останавливаем контейнер
+          docker stop ml-api-test-container
+          docker rm ml-api-test-container
