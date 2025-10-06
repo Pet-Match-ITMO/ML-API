@@ -1,0 +1,21 @@
+[tool.black]
+line-length = 127
+target-version = ['py311']
+extend-exclude = '''
+/(
+    src/llm/
+    | notebooks/
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 127
+skip_glob = ["src/llm/*", "notebooks/*"]
+known_first_party = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
