@@ -1,40 +1,7 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from dataclasses import dataclass
-
-@dataclass
-class SizedPhoto:
-    height: int
-    type: str
-    url: str
-    width: int
-
-@dataclass
-class Photo:
-    id: int
-    date: int
-    access_key: str
-    orig_photo: SizedPhoto
-
-@dataclass
-class Attachment:
-    type: str
-    photo: Optional[Photo]
-
-@dataclass
-class PetInfo:
-    age: int
-    vaccinations: bool
-    sterilization: bool
-    health: str
-    temperament: str
-    name: str
-    birth_place: str
-    grow_up_with: str
-    previous_owner: str
-    attitude_to_people: str
-    passport: bool
-    owner_requirements: str
-    photos: List[str]
+from .attachment import Attachment
+from .pet import PetInfo
 
 @dataclass
 class VKPost:
