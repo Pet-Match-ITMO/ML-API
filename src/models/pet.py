@@ -19,8 +19,8 @@ class Contact(BaseModel):
 
 class PetInfo(BaseModel):
     age: Age
-    vaccinations: bool
-    sterilization: bool
+    vaccinations: Optional[bool] = None
+    sterilization: Optional[bool] = None
     health: Health
     temperament: List[str]
     contact: Contact
